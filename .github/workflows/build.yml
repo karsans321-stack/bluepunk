@@ -1,28 +1,41 @@
-name: Build APK
+name: Build My Custom APK
+
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Unzip project
-        run: unzip -q bluepunk_ready_to_build.zip -d project
-      - name: Fix missing git folder
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Extract Source Code
         run: |
-          mkdir -p project/.git/refs/heads
-          echo "ref: refs/heads/main" > project/.git/HEAD
-      - uses: actions/setup-java@v4
+          mkdir source
+          unzip -q DOC-20261113-WA0073.zip -d source
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
-      - name: Build
-        working-directory: project
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        working-directory: source
         run: |
           chmod +x gradlew
           ./gradlew assemblePrereleaseDebug --no-daemon
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
-          name: bluepunk-apk
-          path: project/app/build/outputs/apk/prerelease/debug/*.apk
+          name: My-Custom-APK
+          path: source/app/build/outputs/apk/prerelease/debug/*.apk
